@@ -1,0 +1,1 @@
+{"name":"Local: J_Ordering","url":"/Users/keshavmakkad/code/DSA/BFS/J_Ordering.java","tests":[{"id":1748671455830,"input":"1\nA B F G\nA<B B<F","output":"adsfv"}],"interactive":false,"memoryLimit":1024,"timeLimit":3000,"srcPath":"/Users/keshavmakkad/code/DSA/BFS/J_Ordering.java","group":"local","local":true}
