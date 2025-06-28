@@ -1,3 +1,7 @@
+#pragma GCC optimize("Ofast")
+#pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx,avx,avx2,fma")
+#pragma GCC optimize("unroll-loops")
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -8,6 +12,7 @@
 #include <cmath>
 #include <set>
 #include <unordered_map>
+#include <unordered_set>
 #include <map>
 #include <queue>
 #include <stack>
@@ -23,7 +28,7 @@ using namespace std;
 
 template <typename T> std::ostream &operator<<(std::ostream &stream, const vector<T> &vec) {for (size_t i = 0; i < vec.size(); i++) { stream << vec[i]; if (i != vec.size() - 1) stream << ' '; }; return stream; } template <typename T> std::istream &operator>>(std::istream &stream, vector<T> &vec) {for (T &x : vec) stream >> x; return stream; } template <typename T, typename U> std::ostream &operator<<(std::ostream &stream, const pair<T, U> &pr) {stream << pr.first << ' ' << pr.second; return stream; } template <typename T, typename U> std::istream &operator>>(std::istream &stream, pair<T, U> &pr) {stream >> pr.first >> pr.second; return stream; } template <typename A, typename B> string to_string(pair<A, B> p); template <typename A, typename B, typename C> string to_string(tuple<A, B, C> p); template <typename A, typename B, typename C, typename D> string to_string(tuple<A, B, C, D> p); string to_string(const string &s) { return '"' + s + '"'; } string to_string(char c) {string s; s += c; return s; } string to_string(const char *s) { return to_string((string)s); } string to_string(bool b) { return (b ? "1" : "0"); } string to_string(vector<bool> v) {bool first = true; string res = "{"; for (int i = 0; i < static_cast<int>(v.size()); i++) {if (!first) {res += ", "; } first = false; res += to_string(v[i]); } res += "}"; return res; } template <size_t N> string to_string(bitset<N> v) {string res = ""; for (size_t i = 0; i < N; i++) {res += static_cast<char>('0' + v[i]); } return res; } template <typename A> string to_string(A v) {bool first = true; string res = "{"; for (const auto &x : v) {if (!first) {res += ", "; } first = false; res += to_string(x); } res += "}"; return res; } template <typename A, typename B> string to_string(pair<A, B> p) { return "(" + to_string(p.first) + ", " + to_string(p.second) + ")"; } template <typename A, typename B, typename C> string to_string(tuple<A, B, C> p) { return "(" + to_string(get<0>(p)) + ", " + to_string(get<1>(p)) + ", " + to_string(get<2>(p)) + ")"; } template <typename A, typename B, typename C, typename D> string to_string(tuple<A, B, C, D> p) { return "(" + to_string(get<0>(p)) + ", " + to_string(get<1>(p)) + ", " + to_string(get<2>(p)) + ", " + to_string(get<3>(p)) + ")"; } void debug_out() { cout << endl; } template <typename Head, typename... Tail> void debug_out(Head H, Tail... T) {cout << " " << to_string(H); debug_out(T...); }
 
-// #define int             long long
+#define int             long long
 #define all(x)          x.begin(), x.end()
 #define double          long double
 #define endl            '\n'
@@ -32,8 +37,8 @@ template <typename T> std::ostream &operator<<(std::ostream &stream, const vecto
 #define v               vector
 #define pb              push_back
 #define bit(num, i)     (num & (1ll << i))
-#define Yes             cout << "Yes" << endl
-#define No              cout << "No" << endl
+#define Yes             cout << "YES" << endl
+#define No              cout << "NO" << endl
 #define f(i, a, b, c) for (int i = (a); (c) > 0 ? i < (b) : i > (b); i += (c))
 
 using pii = pair<int, int>;
@@ -43,11 +48,11 @@ v<int> dy{0, 0, 1, -1, 1, -1, 1, -1};
 string dir = "DURL";
 int INF = 1e18;
 
-struct DSU {
+struct DSU{
     v<int> vec;
 
-    DSU(int N) {
-        vec = v<int>(N+1, -1);
+    DSU(int n){
+        vec = v<int>(n+1, -1);
     }
 
     int parent(int x){
@@ -55,58 +60,83 @@ struct DSU {
         return vec[x] = parent(vec[x]);
     }
 
-    void merge(int x, int y){
+    bool merge(int x, int y){
         x = parent(x);
         y = parent(y);
 
-        if(x == y) return;
+        if(x == y) return false;
 
-        // vec[x] += vec[y];
+        if(vec[x] < vec[y]) swap(x, y);
+
+        vec[x] += vec[y];
         vec[y] = x;
+
+        return true;
     }
 };
 
 void solve()
 {
-    int n;
-    cin >> n;
-    int maxi = 0;
-    v<pair<int, pii>> q;
+    int n, m;
+    cin >> n >> m;
+    auto tostr = [&](int x, int y) -> string {
+        return to_string(min(x, y)) + " " + to_string(max(x, y));
+    };
 
-    f(i, 0, n, 1){
-        int type; cin >> type;
-        if(--type){
-            int x, y;
-            cin >> x >> y;
-            maxi = max(maxi, max(x ,y));
-            q.pb({2, {x, y}});
-        } else{
-            int x;
-            cin >> x;
-            maxi = max(maxi, x);
-            q.pb({1, {x, 0}});
+    v<v<pii>> adj(n+1);
+    v<v<int>> edges;
+    priority_queue<pair<int, pii>, vector<pair<int, pii>>, greater<>> pq;
+    map<string, bool> map;
+    while(m--){
+        int x, y, w;
+        cin >> x >> y >> w;
+
+        adj[x].pb({y, w});
+        pq.push({w, {x, y}});
+        edges.pb({x, y, w});
+        string key = tostr(x, y);
+        map[key] = false;
+    }
+
+    DSU d(n);
+
+
+    while (!pq.empty()) {
+        int current_weight = pq.top().first;
+        vector<pii> same_weight_edges;
+
+        while (!pq.empty() && pq.top().first == current_weight) {
+            same_weight_edges.push_back(pq.top().second);
+            pq.pop();
+        }
+
+        vector<pii> to_merge;
+        for (auto [x, y] : same_weight_edges) {
+            if (d.parent(x) != d.parent(y)) {
+                string key = tostr(x, y);
+                map[key] = true;
+                to_merge.emplace_back(x, y);
+            }
+        }
+
+        for (auto [x, y] : to_merge) {
+            d.merge(x, y);
         }
     }
 
-    // const int maxi = 5e5 + 5;
-    DSU d(maxi+1);
-    v<int> ans;
-    
-    debug(q)
-    f(i, n-1, -1, -1){
-    auto& [type, p] = q[i];
-    if (type == 1) {
-        debug(p.ff, d.parent(p.ff))
-        ans.pb(d.parent(p.ff));
-    } else {
-        if(p.ff != p.ss)
-            d.vec[p.ff] = p.ss;
+
+    f(i, 0, edges.size(), 1){
+        int x = edges[i][0];
+        int y = edges[i][1];
+        int w = edges[i][2];
+        string key = tostr(x, y);
+        if(map[key]){
+            Yes;
+        } else {
+            No;
+        }
     }
 }
-    debug(d.parent(2))
-    reverse(all(ans));
-    cout << ans;
-}  
 
 signed main()
 {
