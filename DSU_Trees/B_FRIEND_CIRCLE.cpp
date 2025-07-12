@@ -91,8 +91,8 @@ void solve()
             val++;
         }
         int a, b;
-        a = map.at(s1);
-        b = map.at(s2);
+        a = map[s1];
+        b = map[s2];
 
         dsu.merge(a, b);
         cout << dsu.size(a) << endl;
